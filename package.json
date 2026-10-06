@@ -4,6 +4,7 @@
     "lint:fix": "prettier  \"*/**/*{.js,.ts}\" -w",
     "lint": "prettier \"*/**/*{.js,.ts}\" --check"
   },
+  "type": "module",
   "dependencies": {
     "@anchor-lang/core": "1.1.2"
   },
