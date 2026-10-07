@@ -1,10 +1,6 @@
 use anchor_lang::prelude::*;
 
-#[constant]
-pub const COUNTER_SEED: &[u8] = b"counter";
-
-#[constant]
-pub const HELLO_WORLD_LAMPORTS: u64 = 1;
-
-#[constant]
-pub const MAX_COUNT: u64 = 10;
+pub const GLOBAL_CONFIG_SEED: &[u8] = b"global_config";
+pub const ESCROW_SEED: &[u8] = b"escrow";
+pub const MILESTONE_SEED: &[u8] = b"milestone";
+pub const ADMIN_ADDRESS: Pubkey = pubkey!("mV8B9brE2rWGfbRWUKhqBws2PzdQLztfFWqLLZ8Rnn3");

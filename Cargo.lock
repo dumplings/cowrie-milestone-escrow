@@ -855,6 +855,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "milestone_escrow"
+version = "0.1.0"
+dependencies = [
+ "anchor-lang",
+ "anchor-spl",
+]
+
+[[package]]
 name = "num-derive"
 version = "0.4.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"

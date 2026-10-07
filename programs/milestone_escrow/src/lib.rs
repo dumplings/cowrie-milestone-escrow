@@ -15,11 +15,24 @@ declare_id!("41vibHeFu14nmgqvbtxeTn3VxMXRD2PyjnFJL1JJCfKy");
 pub mod milestone_escrow {
     use super::*;
 
-    pub fn initialize(ctx: Context<Initialize>) -> Result<()> {
-        crate::instructions::initialize::handle_initialize(ctx)
+    pub fn initialize_global_config(ctx: Context<InitializeGlobalConfig>) -> Result<()> {
+        handle_initialize_global_config(ctx)
     }
 
-    pub fn increment(ctx: Context<Increment>) -> Result<()> {
-        crate::instructions::increment::handle_increment(ctx)
+    pub fn initialize_escrow(
+        ctx: Context<InitializeEscrow>,
+        beneficiary: Pubkey,
+        contract_amount: u64,
+        deadline: i64,
+    ) -> Result<()> {
+        handle_initialize_escrow(ctx, beneficiary, contract_amount, deadline)
+    }
+
+    pub fn add_milestone(ctx: Context<AddMilestone>, amount: u64) -> Result<()> {
+        handle_add_milestone(ctx, amount)
+    }
+
+    pub fn fund_escrow(ctx: Context<FundEscrow>) -> Result<()> {
+        handle_fund_escrow(ctx)
     }
 }
