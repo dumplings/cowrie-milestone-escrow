@@ -4,14 +4,14 @@ import { expect } from "chai";
 
 import {
   ASSOCIATED_TOKEN_PROGRAM_ID,
-  createAssociatedTokenAccountInstruction, getAccount,
+  createAssociatedTokenAccountInstruction,
+  getAccount,
   getAssociatedTokenAddressSync,
   getMint,
-  TOKEN_PROGRAM_ID
+  TOKEN_PROGRAM_ID,
 } from "@solana/spl-token";
 
 import { CowrieIssuer } from "../target/types/cowrie_issuer";
-
 
 describe("cowrie_issuer", () => {
   const CWR_DECIMALS = 6;
@@ -32,8 +32,8 @@ describe("cowrie_issuer", () => {
 
   const creator = anchor.web3.Keypair.generate();
   const creatorAta = getAssociatedTokenAddressSync(
-      cowrieMint,
-      creator.publicKey,
+    cowrieMint,
+    creator.publicKey
   );
 
   it("Initializes Cowrie mint", async () => {
@@ -52,21 +52,18 @@ describe("cowrie_issuer", () => {
 
   it("Creates Creator CWR ATA", async () => {
     const ix = createAssociatedTokenAccountInstruction(
-        provider.wallet.publicKey,
-        creatorAta,
-        creator.publicKey,
-        cowrieMint,
-        TOKEN_PROGRAM_ID,
-        ASSOCIATED_TOKEN_PROGRAM_ID,
+      provider.wallet.publicKey,
+      creatorAta,
+      creator.publicKey,
+      cowrieMint,
+      TOKEN_PROGRAM_ID,
+      ASSOCIATED_TOKEN_PROGRAM_ID
     );
     const tx = new anchor.web3.Transaction().add(ix);
 
     await provider.sendAndConfirm(tx);
 
-    const tokenAccount = await getAccount(
-        provider.connection,
-        creatorAta,
-    );
+    const tokenAccount = await getAccount(provider.connection, creatorAta);
 
     expect(tokenAccount.mint.equals(cowrieMint)).to.be.true;
     expect(tokenAccount.owner.equals(creator.publicKey)).to.be.true;
@@ -80,13 +77,13 @@ describe("cowrie_issuer", () => {
 
     try {
       await program.methods
-          .mintCowrie(new anchor.BN(1))
-          .accountsPartial({
-            admin: attacker.publicKey,
-            destination: creatorAta,
-          })
-          .signers([attacker])
-          .rpc();
+        .mintCowrie(new anchor.BN(1))
+        .accountsPartial({
+          admin: attacker.publicKey,
+          destination: creatorAta,
+        })
+        .signers([attacker])
+        .rpc();
     } catch {
       failed = true;
     }
@@ -96,38 +93,29 @@ describe("cowrie_issuer", () => {
 
   it("Admin mints 10,000 CWR to Creator", async () => {
     const mintAmount = new anchor.BN(10_000).mul(
-        new anchor.BN(10).pow(
-            new anchor.BN(CWR_DECIMALS),
-        )
+      new anchor.BN(10).pow(new anchor.BN(CWR_DECIMALS))
     );
-    const beforeTokenAccount  = await getAccount(
-        provider.connection,
-        creatorAta,
+    const beforeTokenAccount = await getAccount(
+      provider.connection,
+      creatorAta
     );
-    const beforeMint = await getMint(
-        provider.connection,
-        cowrieMint,
-    );
+    const beforeMint = await getMint(provider.connection, cowrieMint);
     console.log(
-        "Before:",
-        "Creator =", beforeTokenAccount.amount.toString(),
-        "Supply =", beforeMint.supply.toString(),
+      "Before:",
+      "Creator =",
+      beforeTokenAccount.amount.toString(),
+      "Supply =",
+      beforeMint.supply.toString()
     );
     await program.methods
-        .mintCowrie(mintAmount)
-        .accounts({
-          destination: creatorAta,
-        })
-        .rpc();
+      .mintCowrie(mintAmount)
+      .accounts({
+        destination: creatorAta,
+      })
+      .rpc();
 
-    const afterTokenAccount = await getAccount(
-        provider.connection,
-        creatorAta,
-    );
-    const afterMint = await getMint(
-        provider.connection,
-        cowrieMint,
-    );
+    const afterTokenAccount = await getAccount(provider.connection, creatorAta);
+    const afterMint = await getMint(provider.connection, cowrieMint);
     expect(afterTokenAccount.amount).to.be.equal(BigInt(mintAmount.toString()));
     expect(afterMint.supply).to.be.equal(BigInt(mintAmount.toString()));
   });
