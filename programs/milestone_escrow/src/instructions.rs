@@ -4,6 +4,7 @@ pub mod claim_milestone;
 pub mod fund_escrow;
 pub mod initialize_escrow;
 pub mod initialize_global_config;
+pub mod refund_remaining;
 
 pub use add_milestone::*;
 pub use approve_milestone::*;
@@ -11,3 +12,4 @@ pub use claim_milestone::*;
 pub use fund_escrow::*;
 pub use initialize_escrow::*;
 pub use initialize_global_config::*;
+pub use refund_remaining::*;

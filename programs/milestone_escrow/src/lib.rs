@@ -43,4 +43,8 @@ pub mod milestone_escrow {
     pub fn claim_milestone(ctx: Context<ClaimMilestone>) -> Result<()> {
         handle_claim_milestone(ctx)
     }
+
+    pub fn refund_remaining(ctx: Context<RefundRemaining>) -> Result<()> {
+        handle_refund_remaining(ctx)
+    }
 }

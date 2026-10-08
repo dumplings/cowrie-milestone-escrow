@@ -24,4 +24,8 @@ pub enum EscrowError {
     MilestoneNotPending,
     #[msg("Milestone must be approved")]
     MilestoneNotApproved,
+    #[msg("Deadline not reached")]
+    DeadlineNotReached,
+    #[msg("Still have approved outstanding")]
+    ApprovedFundsOutstanding,
 }
