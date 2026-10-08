@@ -39,4 +39,8 @@ pub mod milestone_escrow {
     pub fn approve_milestone(ctx: Context<ApproveMilestone>) -> Result<()> {
         handle_approve_milestone(ctx)
     }
+
+    pub fn claim_milestone(ctx: Context<ClaimMilestone>) -> Result<()> {
+        handle_claim_milestone(ctx)
+    }
 }

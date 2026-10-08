@@ -36,6 +36,11 @@ describe("milestone_escrow", () => {
   const creator = anchor.web3.Keypair.generate();
   const beneficiary = anchor.web3.Keypair.generate();
 
+  // 保存已完成 Fund 的账户地址，供后续 Approve / Claim 集成测试复用
+  let fundedEscrowPda: anchor.web3.PublicKey;
+  let firstMilestonePda: anchor.web3.PublicKey;
+  let fundedVaultAta: anchor.web3.PublicKey;
+
   const creatorAta = getAssociatedTokenAddressSync(
       cowrieMint,
       creator.publicKey
@@ -275,5 +280,113 @@ describe("milestone_escrow", () => {
     expect(vaultAfterFund.mint.equals(cowrieMint)).to.be.true;
     expect(vaultAfterFund.owner.equals(escrowPda)).to.be.true;
     expect(escrowAfterFund.status).to.have.property("active");
+
+    fundedEscrowPda = escrowPda;
+    firstMilestonePda = milestonePdas[0];
+    fundedVaultAta = vaultAta;
+  });
+
+  it("Approves and claims the first milestone (200 CWR)", async () => {
+    const claimAmount = cwrToBaseUnits(200, CWR_DECIMALS);
+    const claimAmountRaw = BigInt(claimAmount.toString());
+
+    // Claim 不会自动创建 Beneficiary ATA，测试中由 Creator 支付创建费用
+    const beneficiaryAta = getAssociatedTokenAddressSync(
+        cowrieMint,
+        beneficiary.publicKey
+    );
+
+    const createBeneficiaryAtaIx = createAssociatedTokenAccountInstruction(
+        creator.publicKey,
+        beneficiaryAta,
+        beneficiary.publicKey,
+        cowrieMint,
+        TOKEN_PROGRAM_ID,
+        ASSOCIATED_TOKEN_PROGRAM_ID
+    );
+
+    await anchor.web3.sendAndConfirmTransaction(
+        provider.connection,
+        new anchor.web3.Transaction().add(createBeneficiaryAtaIx),
+        [creator],
+        { commitment: "confirmed" }
+    );
+
+    const vaultBeforeApprove = await getAccount(
+        provider.connection,
+        fundedVaultAta
+    );
+    const beneficiaryBeforeClaim = await getAccount(
+        provider.connection,
+        beneficiaryAta
+    );
+
+    // Creator 批准第一个 Milestone：只修改状态和待支付金额，不转 Token
+    await milestoneEscrowProgram.methods
+        .approveMilestone()
+        .accountsPartial({
+          creator: creator.publicKey,
+          escrow: fundedEscrowPda,
+          milestone: firstMilestonePda,
+        })
+        .signers([creator])
+        .rpc();
+
+    const escrowAfterApprove =
+        await milestoneEscrowProgram.account.escrow.fetch(fundedEscrowPda);
+    const milestoneAfterApprove =
+        await milestoneEscrowProgram.account.milestone.fetch(firstMilestonePda);
+    const vaultAfterApprove = await getAccount(
+        provider.connection,
+        fundedVaultAta
+    );
+
+    expect(milestoneAfterApprove.status).to.have.property("approved");
+    expect(escrowAfterApprove.approvedOutstanding.toString()).to.equal(
+        claimAmount.toString()
+    );
+    expect(escrowAfterApprove.releasedAmount.toString()).to.equal("0");
+    expect(vaultAfterApprove.amount).to.equal(vaultBeforeApprove.amount);
+
+    // Beneficiary 签名领取已批准款项，由 Escrow PDA 授权 Vault 转账
+    await milestoneEscrowProgram.methods
+        .claimMilestone()
+        .accountsPartial({
+          beneficiary: beneficiary.publicKey,
+          escrow: fundedEscrowPda,
+          milestone: firstMilestonePda,
+          mint: cowrieMint,
+          vault: fundedVaultAta,
+          beneficiaryTokenAccount: beneficiaryAta,
+          tokenProgram: TOKEN_PROGRAM_ID,
+        })
+        .signers([beneficiary])
+        .rpc();
+
+    const escrowAfterClaim =
+        await milestoneEscrowProgram.account.escrow.fetch(fundedEscrowPda);
+    const milestoneAfterClaim =
+        await milestoneEscrowProgram.account.milestone.fetch(firstMilestonePda);
+    const vaultAfterClaim = await getAccount(
+        provider.connection,
+        fundedVaultAta
+    );
+    const beneficiaryAfterClaim = await getAccount(
+        provider.connection,
+        beneficiaryAta
+    );
+
+    expect(milestoneAfterClaim.status).to.have.property("claimed");
+    expect(escrowAfterClaim.approvedOutstanding.toString()).to.equal("0");
+    expect(escrowAfterClaim.releasedAmount.toString()).to.equal(
+        claimAmount.toString()
+    );
+    expect(escrowAfterClaim.status).to.have.property("active");
+    expect(vaultAfterClaim.amount).to.equal(
+        vaultBeforeApprove.amount - claimAmountRaw
+    );
+    expect(beneficiaryAfterClaim.amount).to.equal(
+        beneficiaryBeforeClaim.amount + claimAmountRaw
+    );
   });
 });

@@ -1,7 +1,7 @@
-use anchor_lang::prelude::*;
-use crate::state::{Escrow, Milestone, EscrowStatus, MilestoneStatus};
 use crate::constants::{ESCROW_SEED, MILESTONE_SEED};
-use crate::error::{EscrowError};
+use crate::error::EscrowError;
+use crate::state::{Escrow, EscrowStatus, Milestone, MilestoneStatus};
+use anchor_lang::prelude::*;
 
 #[derive(Accounts)]
 pub struct ApproveMilestone<'info> {
@@ -51,6 +51,6 @@ pub fn handle_approve_milestone(ctx: Context<ApproveMilestone>) -> Result<()> {
     let milestone = &mut ctx.accounts.milestone;
     escrow.approved_outstanding = next_approved_outstanding;
     milestone.status = MilestoneStatus::Approved;
-    
+
     Ok(())
 }
