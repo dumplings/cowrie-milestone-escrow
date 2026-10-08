@@ -18,4 +18,8 @@ pub enum EscrowError {
     AllocationExceedsContractAmount,
     #[msg("Milestone allocation must equal the contract amount before funding")]
     IncompleteMilestoneAllocation,
+    #[msg("Escrow must be active")]
+    EscrowNotActive,
+    #[msg("Milestone must be pending")]
+    MilestoneNotPending,
 }

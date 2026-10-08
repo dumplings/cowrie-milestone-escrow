@@ -35,4 +35,8 @@ pub mod milestone_escrow {
     pub fn fund_escrow(ctx: Context<FundEscrow>) -> Result<()> {
         handle_fund_escrow(ctx)
     }
+
+    pub fn approve_milestone(ctx: Context<ApproveMilestone>) -> Result<()> {
+        handle_approve_milestone(ctx)
+    }
 }
